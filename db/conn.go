@@ -2,33 +2,34 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
+	"os"
+
 	_ "github.com/lib/pq"
 )
 
-const (
-	host     = "go_db"
-	port	 = 5432
-	user	 = "postgres"
-	password = "1234"
-	dbname	 = "postgres"
-)
-
 func ConnectDB() (*sql.DB, error) {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
+	// Pega a URL do banco do Render
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		log.Println("❌ ERRO: DATABASE_URL não definida")
+		return nil, sql.ErrConnDone
 	}
 
+	// Conecta no banco usando a URL completa
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Println("❌ Erro ao abrir conexão com BD:", err)
+		return nil, err
+	}
+
+	// Testa conexão
 	err = db.Ping()
 	if err != nil {
-		panic(err)
+		log.Println("❌ Não conectou ao BD:", err)
+		return nil, err
 	}
 
-	fmt.Println("Connected to " + dbname)
-
+	log.Println("✅ Conectado ao banco com sucesso!")
 	return db, nil
 }
