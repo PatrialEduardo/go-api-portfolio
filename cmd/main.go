@@ -6,6 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"go-api/repository"
 	"go-api/db"
+    "os"
+    "log"
+
 )
 
 func main() {
@@ -15,6 +18,19 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+		sqlBytes, err := os.ReadFile("db/init.sql")
+	if err != nil {
+		log.Println("⚠️  init.sql não encontrado, ignorando migração")
+	} else {
+		_, err := dbConnection.Exec(string(sqlBytes))
+		if err != nil {
+			log.Println("⚠️  Erro ao executar init.sql:", err)
+		} else {
+			log.Println("✅ Migração SQL executada com sucesso")
+		}
+	}
+
 
 	//camada de repository
 	ProductRepository := repository.NewProductRepository(dbConnection)
